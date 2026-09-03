@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
 function App() {
@@ -12,34 +11,45 @@ function App() {
     return savedTasks ? JSON.parse(savedTasks) : [];
   });
 
-  // =========================
-  // INPUT
-  // =========================
-
   const [input, setInput] = useState("");
-
-  // =========================
-  // SEARCH
-  // =========================
-
-  const [search, setSearch] = useState("");
-  const [searchMode, setSearchMode] = useState(false);
-
-  // =========================
-  // FILTER
-  // =========================
-
-  const [filter, setFilter] = useState("all");
 
   // =========================
   // EDIT
   // =========================
 
   const [editingId, setEditingId] = useState(null);
-  const [editText, setEditText] = useState("");
+  const [editingText, setEditingText] = useState("");
 
   // =========================
-  // SAVE TO LOCAL STORAGE
+  // SEARCH & FILTER
+  // =========================
+
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+
+  // =========================
+  // REMINDER
+  // =========================
+
+  const [reminderDate, setReminderDate] = useState("");
+  const [reminderTime, setReminderTime] = useState("");
+  const [reminderMinutes, setReminderMinutes] = useState("15");
+
+  // =========================
+  // NOTIFICATION PERMISSION
+  // =========================
+
+  const [notificationPermission, setNotificationPermission] =
+    useState(() => {
+      if ("Notification" in window) {
+        return Notification.permission;
+      }
+
+      return "unsupported";
+    });
+
+  // =========================
+  // SAVE TASKS
   // =========================
 
   useEffect(() => {
@@ -50,42 +60,137 @@ function App() {
   }, [tasks]);
 
   // =========================
+  // ENABLE NOTIFICATIONS
+  // =========================
+
+  const enableNotifications = async () => {
+    if (!("Notification" in window)) {
+      alert(
+        "Notifications are not supported on this browser."
+      );
+
+      setNotificationPermission("unsupported");
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      setNotificationPermission("granted");
+
+      new Notification("LittleList ✨", {
+        body: "Notifications are already enabled! 🔔",
+      });
+
+      return;
+    }
+
+    try {
+      const permission =
+        await Notification.requestPermission();
+
+      setNotificationPermission(permission);
+
+      if (permission === "granted") {
+        new Notification("LittleList ✨", {
+          body: "Notifications are now enabled! 🔔",
+        });
+      }
+
+      if (permission === "denied") {
+        alert(
+          "Notifications are blocked. Please allow them in your browser settings."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Notification permission error:",
+        error
+      );
+    }
+  };
+
+  // =========================
+  // NOTIFICATION BUTTON TEXT
+  // =========================
+
+  const notificationButtonText = () => {
+    if (notificationPermission === "granted") {
+      return "🔔 Notifications Enabled";
+    }
+
+    if (notificationPermission === "denied") {
+      return "🚫 Notifications Blocked";
+    }
+
+    if (notificationPermission === "unsupported") {
+      return "🔕 Notifications Unsupported";
+    }
+
+    return "🔔 Enable Notifications";
+  };
+
+  // =========================
   // ADD TASK
   // =========================
 
   const addTask = () => {
-    if (input.trim() === "") return;
+    const text = input.trim();
+
+    if (!text) {
+      alert("Please enter a task.");
+      return;
+    }
+
+    if (
+      (reminderDate && !reminderTime) ||
+      (!reminderDate && reminderTime)
+    ) {
+      alert(
+        "Please select both reminder date and time."
+      );
+      return;
+    }
 
     const newTask = {
       id: Date.now(),
-      text: input.trim(),
+      text,
       completed: false,
+
+      reminderDate,
+      reminderTime,
+
+      reminderMinutes:
+        reminderDate && reminderTime
+          ? Number(reminderMinutes)
+          : null,
+
+      reminderSent: false,
+      dueNotificationSent: false,
+      overdueNotificationSent: false,
     };
 
     setTasks((previousTasks) => [
-      ...previousTasks,
       newTask,
+      ...previousTasks,
     ]);
 
     setInput("");
+    setReminderDate("");
+    setReminderTime("");
+    setReminderMinutes("15");
   };
 
   // =========================
-  // ENTER KEY
+  // ENTER TO ADD
   // =========================
 
-  const handleKeyDown = (event) => {
+  const handleInputKeyDown = (event) => {
     if (event.key === "Enter") {
-      if (searchMode) {
-        return;
-      }
-
       addTask();
     }
   };
 
   // =========================
-  // TOGGLE TASK
+  // COMPLETE TASK
   // =========================
 
   const toggleTask = (id) => {
@@ -114,12 +219,12 @@ function App() {
   };
 
   // =========================
-  // START EDIT
+  // START EDITING
   // =========================
 
-  const startEdit = (task) => {
+  const startEditing = (task) => {
     setEditingId(task.id);
-    setEditText(task.text);
+    setEditingText(task.text);
   };
 
   // =========================
@@ -127,68 +232,252 @@ function App() {
   // =========================
 
   const saveEdit = (id) => {
-    if (editText.trim() === "") return;
+    const text = editingText.trim();
+
+    if (!text) {
+      return;
+    }
 
     setTasks((previousTasks) =>
       previousTasks.map((task) =>
         task.id === id
           ? {
               ...task,
-              text: editText.trim(),
+              text,
             }
           : task
       )
     );
 
     setEditingId(null);
-    setEditText("");
+    setEditingText("");
   };
 
   // =========================
-  // SEARCH MODE
+  // EDIT KEYBOARD
   // =========================
 
-  const toggleSearchMode = () => {
-    setSearchMode((previousMode) => !previousMode);
+  const handleEditKeyDown = (event, id) => {
+    if (event.key === "Enter") {
+      saveEdit(id);
+    }
 
-    setSearch("");
-    setInput("");
+    if (event.key === "Escape") {
+      setEditingId(null);
+      setEditingText("");
+    }
   };
+
+  // =========================
+  // FILTER TASKS
+  // =========================
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesSearch = task.text
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesFilter =
+        filter === "all"
+          ? true
+          : filter === "active"
+          ? !task.completed
+          : task.completed;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [tasks, search, filter]);
 
   // =========================
   // STATISTICS
   // =========================
+
+  const totalTasks = tasks.length;
 
   const completedTasks = tasks.filter(
     (task) => task.completed
   ).length;
 
   const remainingTasks =
-    tasks.length - completedTasks;
+    totalTasks - completedTasks;
 
   const progress =
-    tasks.length === 0
+    totalTasks === 0
       ? 0
       : Math.round(
-          (completedTasks / tasks.length) * 100
+          (completedTasks / totalTasks) * 100
         );
 
   // =========================
-  // FILTER + SEARCH
+  // REMINDER CHECKER
   // =========================
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.text
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  useEffect(() => {
+    const checkReminders = () => {
+      if (
+        !("Notification" in window) ||
+        Notification.permission !== "granted"
+      ) {
+        return;
+      }
 
-    const matchesFilter =
-      filter === "all" ||
-      (filter === "active" && !task.completed) ||
-      (filter === "completed" && task.completed);
+      const now = new Date();
 
-    return matchesSearch && matchesFilter;
-  });
+      setTasks((previousTasks) => {
+        let changed = false;
+
+        const updatedTasks = previousTasks.map(
+          (task) => {
+            if (
+              !task.reminderDate ||
+              !task.reminderTime ||
+              task.completed
+            ) {
+              return task;
+            }
+
+            const dueTime = new Date(
+              `${task.reminderDate}T${task.reminderTime}`
+            );
+
+            if (Number.isNaN(dueTime.getTime())) {
+              return task;
+            }
+
+            const reminderTime = new Date(
+              dueTime.getTime() -
+                Number(
+                  task.reminderMinutes || 15
+                ) *
+                  60 *
+                  1000
+            );
+
+            let updatedTask = task;
+
+            // Reminder before due time
+            if (
+              now >= reminderTime &&
+              now < dueTime &&
+              !task.reminderSent
+            ) {
+              new Notification("LittleList 🔔", {
+                body: `${task.text} is coming up! Your task is due soon.`,
+              });
+
+              updatedTask = {
+                ...updatedTask,
+                reminderSent: true,
+              };
+
+              changed = true;
+            }
+
+            // Due notification
+            if (
+              now >= dueTime &&
+              !task.dueNotificationSent
+            ) {
+              new Notification("LittleList ⏰", {
+                body: `${task.text} is due now!`,
+              });
+
+              updatedTask = {
+                ...updatedTask,
+                dueNotificationSent: true,
+              };
+
+              changed = true;
+            }
+
+            // 10 minutes overdue
+            const overdueTime =
+              dueTime.getTime() +
+              10 * 60 * 1000;
+
+            if (
+              now >= overdueTime &&
+              !task.overdueNotificationSent
+            ) {
+              new Notification("LittleList 🚨", {
+                body: `Hurry up! ${task.text} is still incomplete.`,
+              });
+
+              updatedTask = {
+                ...updatedTask,
+                overdueNotificationSent: true,
+              };
+
+              changed = true;
+            }
+
+            return updatedTask;
+          }
+        );
+
+        return changed
+          ? updatedTasks
+          : previousTasks;
+      });
+    };
+
+    checkReminders();
+
+    const interval = setInterval(
+      checkReminders,
+      10000
+    );
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  // =========================
+  // FORMAT REMINDER
+  // =========================
+
+  const formatReminder = (task) => {
+    if (
+      !task.reminderDate ||
+      !task.reminderTime
+    ) {
+      return null;
+    }
+
+    const date = new Date(
+      `${task.reminderDate}T${task.reminderTime}`
+    );
+
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    const formattedDate =
+      date.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+
+    const formattedTime =
+      date.toLocaleTimeString("en-IN", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+    const minutes =
+      task.reminderMinutes || 15;
+
+    const reminderText =
+      minutes === 60
+        ? "1 hour before"
+        : `${minutes} minutes before`;
+
+    return `${formattedDate} • ${formattedTime} • ${reminderText}`;
+  };
 
   // =========================
   // UI
@@ -196,10 +485,7 @@ function App() {
 
   return (
     <div className="app">
-
       <div className="todo-container">
-
-        {/* HEADER */}
 
         <h1>LittleList ✨</h1>
 
@@ -207,15 +493,26 @@ function App() {
           Little tasks. Big progress.
         </p>
 
-        {/* =========================
-            STATISTICS
-        ========================= */}
+        {/* Notifications */}
+
+        <button
+          className="notification-button"
+          onClick={enableNotifications}
+          disabled={
+            notificationPermission ===
+            "unsupported"
+          }
+        >
+          {notificationButtonText()}
+        </button>
+
+        {/* Statistics */}
 
         <div className="stats">
 
           <div className="stat-card">
             <span className="stat-number">
-              {tasks.length}
+              {totalTasks}
             </span>
 
             <span className="stat-label">
@@ -245,101 +542,154 @@ function App() {
 
         </div>
 
-        {/* =========================
-            PROGRESS
-        ========================= */}
+        {/* Progress */}
 
         <div className="progress-section">
 
           <div className="progress-header">
-            <span>Your progress</span>
-
-            <strong>
-              {progress}%
-            </strong>
+            <span>Progress</span>
+            <span>{progress}%</span>
           </div>
 
           <div className="progress-bar">
-
             <div
               className="progress-fill"
               style={{
                 width: `${progress}%`,
               }}
-            ></div>
+            />
+          </div>
+
+        </div>
+
+        {/* Add Task */}
+
+        <div className="add-task-section">
+
+          <div className="main-input">
+
+            <input
+              type="text"
+              placeholder="What needs to be done?"
+              value={input}
+              onChange={(event) =>
+                setInput(event.target.value)
+              }
+              onKeyDown={handleInputKeyDown}
+            />
+
+            <button
+              className="add-button"
+              onClick={addTask}
+            >
+              Add
+            </button>
+
+          </div>
+
+          {/* Reminder */}
+
+          <div className="reminder-controls">
+
+            <div className="reminder-field">
+
+              <label>
+                📅 Reminder Date
+              </label>
+
+              <input
+                type="date"
+                value={reminderDate}
+                onChange={(event) =>
+                  setReminderDate(
+                    event.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            <div className="reminder-field">
+
+              <label>
+                ⏰ Reminder Time
+              </label>
+
+              <input
+                type="time"
+                value={reminderTime}
+                onChange={(event) =>
+                  setReminderTime(
+                    event.target.value
+                  )
+                }
+              />
+
+            </div>
+
+            <div className="reminder-field">
+
+              <label>
+                🔔 Remind Me
+              </label>
+
+              <select
+                value={reminderMinutes}
+                onChange={(event) =>
+                  setReminderMinutes(
+                    event.target.value
+                  )
+                }
+              >
+                <option value="5">
+                  5 minutes before
+                </option>
+
+                <option value="10">
+                  10 minutes before
+                </option>
+
+                <option value="15">
+                  15 minutes before
+                </option>
+
+                <option value="30">
+                  30 minutes before
+                </option>
+
+                <option value="60">
+                  1 hour before
+                </option>
+              </select>
+
+            </div>
 
           </div>
 
         </div>
 
-        {/* =========================
-            MAIN INPUT BAR
-        ========================= */}
+        {/* Search */}
 
-        <div className="main-input">
+        <div className="search-box">
 
           <input
             type="text"
-            placeholder={
-              searchMode
-                ? "Search your tasks..."
-                : "What needs to be done?"
+            placeholder="🔍 Search your tasks..."
+            value={search}
+            onChange={(event) =>
+              setSearch(event.target.value)
             }
-            value={
-              searchMode
-                ? search
-                : input
-            }
-            onChange={(event) => {
-              if (searchMode) {
-                setSearch(event.target.value);
-              } else {
-                setInput(event.target.value);
-              }
-            }}
-            onKeyDown={handleKeyDown}
-            autoFocus={searchMode}
           />
-
-          {/* SEARCH BUTTON */}
-
-          <button
-            className="search-button"
-            onClick={toggleSearchMode}
-            title={
-              searchMode
-                ? "Close search"
-                : "Search tasks"
-            }
-          >
-            {searchMode ? "✕" : "🔍"}
-          </button>
-
-          {/* ADD BUTTON */}
-
-          {!searchMode && (
-            <button
-              className="add-button"
-              onClick={addTask}
-              title="Add task"
-            >
-              +
-            </button>
-          )}
 
         </div>
 
-        {/* =========================
-            FILTERS
-        ========================= */}
+        {/* Filters */}
 
         <div className="filters">
 
           <button
             className={
-              filter === "all"
-                ? "active-filter"
-                : ""
+              filter === "all" ? "active" : ""
             }
             onClick={() => setFilter("all")}
           >
@@ -348,9 +698,7 @@ function App() {
 
           <button
             className={
-              filter === "active"
-                ? "active-filter"
-                : ""
+              filter === "active" ? "active" : ""
             }
             onClick={() => setFilter("active")}
           >
@@ -360,7 +708,7 @@ function App() {
           <button
             className={
               filter === "completed"
-                ? "active-filter"
+                ? "active"
                 : ""
             }
             onClick={() =>
@@ -372,38 +720,21 @@ function App() {
 
         </div>
 
-        {/* =========================
-            TASK INFO
-        ========================= */}
-
-        <div className="task-info">
-
-          <span>
-            {filteredTasks.length} task
-            {filteredTasks.length !== 1
-              ? "s"
-              : ""}
-          </span>
-
-          <span>
-            {remainingTasks} remaining
-          </span>
-
-        </div>
-
-        {/* =========================
-            TASK LIST
-        ========================= */}
+        {/* Task List */}
 
         <div className="task-list">
 
           {filteredTasks.length === 0 ? (
 
-            <p className="empty-message">
-              {searchMode && search
-                ? "No matching tasks."
-                : "No tasks yet. Add your first task."}
-            </p>
+            <div className="empty-state">
+              {search
+                ? "🔍 No matching tasks found."
+                : filter === "completed"
+                ? "✨ No completed tasks yet."
+                : filter === "active"
+                ? "🎉 No active tasks!"
+                : "🌸 Your list is empty. Add your first task!"}
+            </div>
 
           ) : (
 
@@ -418,97 +749,95 @@ function App() {
                 key={task.id}
               >
 
-                {/* COMPLETE */}
+                {/* Complete */}
 
                 <button
-                  className="complete-btn"
+                  className="check-button"
                   onClick={() =>
                     toggleTask(task.id)
                   }
-                  title={
-                    task.completed
-                      ? "Mark as active"
-                      : "Mark as completed"
-                  }
                 >
-                  {task.completed
-                    ? "✓"
-                    : "○"}
+                  {task.completed ? "✓" : ""}
                 </button>
 
-                {/* EDIT MODE */}
+                {/* Content */}
 
-                {editingId === task.id ? (
+                <div className="task-content">
 
-                  <>
+                  {editingId === task.id ? (
 
                     <input
                       className="edit-input"
                       type="text"
-                      value={editText}
+                      value={editingText}
+                      autoFocus
                       onChange={(event) =>
-                        setEditText(
+                        setEditingText(
                           event.target.value
                         )
                       }
-                      onKeyDown={(event) => {
-                        if (
-                          event.key === "Enter"
-                        ) {
-                          saveEdit(task.id);
-                        }
-                      }}
-                      autoFocus
+                      onKeyDown={(event) =>
+                        handleEditKeyDown(
+                          event,
+                          task.id
+                        )
+                      }
                     />
 
-                    <button
-                      className="save-btn"
-                      onClick={() =>
-                        saveEdit(task.id)
-                      }
-                    >
-                      Save
-                    </button>
-
-                  </>
-
-                ) : (
-
-                  <>
-
-                    {/* TASK TEXT */}
+                  ) : (
 
                     <span className="task-text">
                       {task.text}
                     </span>
 
-                    {/* EDIT */}
+                  )}
+
+                  {formatReminder(task) && (
+                    <span className="task-reminder">
+                      🔔 {formatReminder(task)}
+                    </span>
+                  )}
+
+                </div>
+
+                {/* Actions */}
+
+                <div className="task-actions">
+
+                  {editingId === task.id ? (
 
                     <button
-                      className="edit-btn"
+                      className="save-button"
                       onClick={() =>
-                        startEdit(task)
+                        saveEdit(task.id)
                       }
-                      title="Edit task"
                     >
-                      ✎
+                      ✓
                     </button>
 
-                    {/* DELETE */}
+                  ) : (
 
                     <button
-                      className="delete-btn"
+                      className="edit-button"
                       onClick={() =>
-                        deleteTask(task.id)
+                        startEditing(task)
                       }
-                      title="Delete task"
                     >
-                      ×
+                      ✏️
                     </button>
 
-                  </>
+                  )}
 
-                )}
+                  <button
+                    className="delete-button"
+                    onClick={() =>
+                      deleteTask(task.id)
+                    }
+                  >
+                    🗑️
+                  </button>
+
+                </div>
 
               </div>
 
@@ -518,11 +847,13 @@ function App() {
 
         </div>
 
-      </div>
+        <div className="footer-text">
+          Made with 💜 for your little wins.
+        </div>
 
+      </div>
     </div>
   );
 }
 
 export default App;
-
