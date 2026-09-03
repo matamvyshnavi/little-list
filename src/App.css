@@ -1,0 +1,1239 @@
+
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family:
+    Inter,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   MAIN WORLD
+========================================================= */
+
+.app {
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 50px 20px;
+
+  position: relative;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(255, 120, 210, 0.42),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(100, 170, 255, 0.45),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 50% 90%,
+      rgba(170, 100, 255, 0.4),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #080714,
+      #111027,
+      #170d29,
+      #080714
+    );
+
+  background-size: 150% 150%;
+
+  animation: aurora 14s ease-in-out infinite alternate;
+}
+
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 20%;
+  }
+
+  100% {
+    background-position: 40% 100%;
+  }
+}
+
+/* =========================================================
+   3D FLOATING ORBS
+========================================================= */
+
+.app::before,
+.app::after {
+  content: "";
+
+  position: absolute;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  z-index: 0;
+}
+
+/* BIG PINK ORB */
+
+.app::before {
+  width: 330px;
+  height: 330px;
+
+  top: -100px;
+  left: -90px;
+
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      rgba(255, 255, 255, 0.8),
+      rgba(255, 110, 210, 0.45) 18%,
+      rgba(165, 65, 255, 0.25) 50%,
+      transparent 72%
+    );
+
+  filter: blur(1px);
+
+  box-shadow:
+    0 0 80px rgba(255, 80, 210, 0.35),
+    inset -30px -30px 70px rgba(80, 20, 130, 0.3),
+    inset 20px 20px 40px rgba(255, 255, 255, 0.18);
+
+  animation:
+    orbFloatOne 9s ease-in-out infinite,
+    orbRotate 16s linear infinite;
+}
+
+/* BLUE ORB */
+
+.app::after {
+  width: 260px;
+  height: 260px;
+
+  right: -70px;
+  bottom: -50px;
+
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      rgba(255, 255, 255, 0.7),
+      rgba(100, 180, 255, 0.42) 20%,
+      rgba(125, 70, 255, 0.25) 55%,
+      transparent 75%
+    );
+
+  box-shadow:
+    0 0 90px rgba(90, 150, 255, 0.35),
+    inset -25px -25px 60px rgba(30, 20, 120, 0.35),
+    inset 15px 15px 35px rgba(255, 255, 255, 0.16);
+
+  animation:
+    orbFloatTwo 11s ease-in-out infinite,
+    orbRotate 20s linear infinite reverse;
+}
+
+@keyframes orbFloatOne {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(90px, 70px, 40px) scale(1.12);
+  }
+}
+
+@keyframes orbFloatTwo {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(-80px, -60px, 30px) scale(1.15);
+  }
+}
+
+@keyframes orbRotate {
+  from {
+    filter: hue-rotate(0deg);
+  }
+
+  to {
+    filter: hue-rotate(40deg);
+  }
+}
+
+/* =========================================================
+   FLOATING PARTICLE FIELD
+========================================================= */
+
+.todo-container::before,
+.todo-container::after {
+  content: "✦   ·   ✧   ·   ✦";
+
+  position: absolute;
+
+  color: rgba(255, 255, 255, 0.45);
+
+  font-size: 18px;
+
+  letter-spacing: 25px;
+
+  pointer-events: none;
+
+  animation: sparkleFloat 6s ease-in-out infinite;
+}
+
+.todo-container::before {
+  top: -35px;
+  right: 20px;
+}
+
+.todo-container::after {
+  bottom: -30px;
+  left: 20px;
+
+  animation-delay: -3s;
+}
+
+@keyframes sparkleFloat {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: translateY(-12px) scale(1.08);
+  }
+}
+
+/* =========================================================
+   MAIN 3D GLASS CARD
+========================================================= */
+
+.todo-container {
+  width: 100%;
+  max-width: 720px;
+
+  padding: 42px;
+
+  position: relative;
+
+  z-index: 2;
+
+  border-radius: 34px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.13),
+      rgba(255, 255, 255, 0.055)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.5),
+    0 15px 40px rgba(140, 80, 255, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+
+  transform:
+    perspective(1200px)
+    rotateX(1deg);
+
+  animation:
+    cardEntrance 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+
+  transition:
+    transform 0.5s ease,
+    box-shadow 0.5s ease;
+}
+
+/* CARD HOVER = 3D DEPTH */
+
+.todo-container:hover {
+  transform:
+    perspective(1200px)
+    rotateX(0deg)
+    translateY(-5px);
+
+  box-shadow:
+    0 50px 120px rgba(0, 0, 0, 0.58),
+    0 20px 60px rgba(150, 80, 255, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+
+    transform:
+      perspective(1200px)
+      translateY(50px)
+      rotateX(8deg)
+      scale(0.92);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      perspective(1200px)
+      translateY(0)
+      rotateX(1deg)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   CARD SHINE
+========================================================= */
+
+.todo-container {
+  overflow: hidden;
+}
+
+.todo-container > * {
+  position: relative;
+  z-index: 2;
+}
+
+.todo-container {
+  isolation: isolate;
+}
+
+.todo-container::marker {
+  display: none;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+h1 {
+  text-align: center;
+
+  font-size: 46px;
+
+  font-weight: 800;
+
+  letter-spacing: -2px;
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 20px rgba(210, 150, 255, 0.35),
+    0 4px 20px rgba(0, 0, 0, 0.25);
+
+  margin-bottom: 8px;
+
+  animation: titleFloat 4s ease-in-out infinite;
+}
+
+@keyframes titleFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.tagline {
+  text-align: center;
+
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 14px;
+
+  margin-bottom: 32px;
+
+  letter-spacing: 0.3px;
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.stats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 14px;
+
+  margin-bottom: 26px;
+}
+
+.stat-card {
+  position: relative;
+
+  padding: 18px 10px;
+
+  text-align: center;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.13),
+      rgba(255, 255, 255, 0.045)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.16);
+
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.18),
+    inset 0 1px rgba(255, 255, 255, 0.2);
+
+  transform:
+    perspective(500px)
+    translateZ(0);
+
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease;
+}
+
+.stat-card:hover {
+  transform:
+    perspective(500px)
+    translateY(-8px)
+    rotateX(4deg)
+    translateZ(15px);
+
+  box-shadow:
+    0 20px 35px rgba(0, 0, 0, 0.25),
+    0 0 25px rgba(170, 100, 255, 0.1);
+}
+
+.stat-number {
+  display: block;
+
+  font-size: 28px;
+
+  font-weight: 800;
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 15px rgba(205, 150, 255, 0.35);
+}
+
+.stat-label {
+  display: block;
+
+  margin-top: 5px;
+
+  color: rgba(255, 255, 255, 0.48);
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+}
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.progress-section {
+  margin-bottom: 28px;
+}
+
+.progress-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 10px;
+
+  color: rgba(255, 255, 255, 0.52);
+
+  font-size: 12px;
+}
+
+.progress-header strong {
+  color: #d8b4fe;
+
+  font-size: 13px;
+
+  text-shadow:
+    0 0 12px rgba(190, 130, 255, 0.5);
+}
+
+.progress-bar {
+  width: 100%;
+
+  height: 11px;
+
+  padding: 2px;
+
+  border-radius: 30px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  overflow: hidden;
+
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.progress-fill {
+  height: 100%;
+
+  border-radius: 30px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #9b5cff,
+      #d946ef,
+      #ff75b5,
+      #8b5cf6
+    );
+
+  background-size: 300% 100%;
+
+  box-shadow:
+    0 0 18px rgba(196, 100, 255, 0.65);
+
+  animation: progressGlow 4s linear infinite;
+
+  transition:
+    width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes progressGlow {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 300% 50%;
+  }
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.main-input {
+  display: flex;
+
+  align-items: center;
+
+  width: 100%;
+
+  height: 58px;
+
+  margin-bottom: 24px;
+
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  background:
+    rgba(255, 255, 255, 0.09);
+
+  border: 1px solid rgba(255, 255, 255, 0.17);
+
+  box-shadow:
+    0 15px 30px rgba(0, 0, 0, 0.18),
+    inset 0 1px rgba(255, 255, 255, 0.18);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.main-input:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(210, 160, 255, 0.3);
+}
+
+.main-input:focus-within {
+  transform:
+    translateY(-3px)
+    scale(1.01);
+
+  border-color:
+    rgba(190, 120, 255, 0.5);
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.25),
+    0 0 30px rgba(165, 90, 255, 0.12),
+    inset 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.main-input input {
+  flex: 1;
+
+  height: 100%;
+
+  padding: 0 18px;
+
+  border: none;
+
+  outline: none;
+
+  background: transparent;
+
+  color: white;
+
+  font-size: 15px;
+}
+
+.main-input input::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.search-button {
+  width: 50px;
+
+  height: 100%;
+
+  border: none;
+
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.55);
+
+  font-size: 17px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease,
+    background 0.25s ease;
+}
+
+.search-button:hover {
+  color: white;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  transform: scale(1.1);
+}
+
+.search-button:active {
+  transform: scale(0.9);
+}
+
+/* =========================================================
+   ADD BUTTON
+========================================================= */
+
+.add-button {
+  width: 58px;
+
+  height: 100%;
+
+  border: none;
+
+  color: white;
+
+  font-size: 28px;
+
+  cursor: pointer;
+
+  background:
+    linear-gradient(
+      135deg,
+      #a855f7,
+      #ec4899
+    );
+
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.35),
+    0 0 20px rgba(190, 80, 255, 0.2);
+
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.add-button:hover {
+  filter: brightness(1.15);
+
+  transform:
+    scale(1.06)
+    rotate(2deg);
+
+  box-shadow:
+    0 0 30px rgba(200, 80, 255, 0.35),
+    inset 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.add-button:active {
+  transform: scale(0.9);
+}
+
+/* =========================================================
+   FILTER PILLS
+========================================================= */
+
+.filters {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  margin: 5px 0 23px;
+}
+
+.filters button {
+  padding: 8px 17px;
+
+  border-radius: 30px;
+
+  border: 1px solid rgba(255, 255, 255, 0.13);
+
+  background:
+    rgba(255, 255, 255, 0.06);
+
+  color: rgba(255, 255, 255, 0.5);
+
+  font-size: 12px;
+
+  font-weight: 650;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(10px);
+
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.filters button:hover {
+  transform: translateY(-3px);
+
+  color: white;
+
+  background:
+    rgba(255, 255, 255, 0.11);
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.filters button:active {
+  transform: scale(0.94);
+}
+
+.filters .active-filter {
+  color: white;
+
+  border-color: transparent;
+
+  background:
+    linear-gradient(
+      135deg,
+      #9b5cff,
+      #d946ef
+    );
+
+  box-shadow:
+    0 7px 22px rgba(168, 85, 247, 0.3),
+    0 0 15px rgba(217, 70, 239, 0.15);
+}
+
+/* =========================================================
+   TASK INFO
+========================================================= */
+
+.task-info {
+  display: flex;
+
+  justify-content: space-between;
+
+  margin: 0 5px 12px;
+
+  color: rgba(255, 255, 255, 0.38);
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   TASK LIST
+========================================================= */
+
+.task-list {
+  min-height: 150px;
+
+  padding: 3px;
+}
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.empty-message {
+  text-align: center;
+
+  color: rgba(255, 255, 255, 0.38);
+
+  padding: 50px 10px;
+
+  font-size: 14px;
+
+  animation: emptyFloat 3s ease-in-out infinite;
+}
+
+@keyframes emptyFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* =========================================================
+   TASK CARD
+========================================================= */
+
+.task {
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  padding: 15px;
+
+  margin-bottom: 11px;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.11),
+      rgba(255, 255, 255, 0.045)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.13);
+
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.15),
+    inset 0 1px rgba(255, 255, 255, 0.15);
+
+  animation:
+    taskAppear 0.4s ease;
+
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+@keyframes taskAppear {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(15px)
+      scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+/* TASK 3D HOVER */
+
+.task:hover {
+  transform:
+    translateX(6px)
+    translateY(-3px)
+    perspective(600px)
+    rotateX(2deg);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.06)
+    );
+
+  box-shadow:
+    0 18px 35px rgba(0, 0, 0, 0.22),
+    0 0 25px rgba(160, 90, 255, 0.08),
+    inset 0 1px rgba(255, 255, 255, 0.22);
+}
+
+/* =========================================================
+   COMPLETE BUTTON
+========================================================= */
+
+.complete-btn {
+  width: 27px;
+
+  height: 27px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+
+  background:
+    rgba(255, 255, 255, 0.06);
+
+  color: white;
+
+  font-size: 14px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.complete-btn:hover {
+  transform: scale(1.18);
+
+  border-color: #c084fc;
+
+  box-shadow:
+    0 0 18px rgba(192, 132, 252, 0.35);
+}
+
+.complete-btn:active {
+  transform: scale(0.85);
+}
+
+.completed .complete-btn {
+  border-color: transparent;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #ec4899
+    );
+
+  box-shadow:
+    0 0 18px rgba(168, 85, 247, 0.35);
+}
+
+/* =========================================================
+   TASK TEXT
+========================================================= */
+
+.task-text {
+  flex: 1;
+
+  color: rgba(255, 255, 255, 0.88);
+
+  font-size: 14px;
+
+  line-height: 1.45;
+
+  word-break: break-word;
+
+  transition:
+    color 0.3s ease;
+}
+
+.completed .task-text {
+  text-decoration: line-through;
+
+  color: rgba(255, 255, 255, 0.28);
+}
+
+/* =========================================================
+   EDIT + DELETE
+========================================================= */
+
+.edit-btn,
+.delete-btn {
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  padding: 5px;
+
+  font-size: 17px;
+
+  color: rgba(255, 255, 255, 0.35);
+
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease;
+}
+
+.edit-btn:hover {
+  color: #c084fc;
+
+  transform:
+    scale(1.2)
+    rotate(-8deg);
+}
+
+.delete-btn:hover {
+  color: #fb7185;
+
+  transform:
+    scale(1.2)
+    rotate(8deg);
+}
+
+.edit-btn:active,
+.delete-btn:active {
+  transform: scale(0.8);
+}
+
+/* =========================================================
+   EDIT INPUT
+========================================================= */
+
+.edit-input {
+  flex: 1;
+
+  padding: 9px 11px;
+
+  border-radius: 10px;
+
+  border: 1px solid rgba(192, 132, 252, 0.35);
+
+  outline: none;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  color: white;
+
+  font-size: 14px;
+
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.edit-input:focus {
+  border-color: #c084fc;
+
+  box-shadow:
+    0 0 20px rgba(192, 132, 252, 0.12);
+}
+
+/* =========================================================
+   SAVE
+========================================================= */
+
+.save-btn {
+  border: none;
+
+  color: white;
+
+  padding: 8px 14px;
+
+  border-radius: 9px;
+
+  cursor: pointer;
+
+  font-size: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #d946ef
+    );
+
+  box-shadow:
+    0 7px 18px rgba(168, 85, 247, 0.22);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.save-btn:hover {
+  transform:
+    translateY(-2px)
+    scale(1.03);
+
+  box-shadow:
+    0 10px 25px rgba(168, 85, 247, 0.35);
+}
+
+.save-btn:active {
+  transform: scale(0.92);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+  .app {
+    padding: 25px 12px;
+
+    align-items: flex-start;
+  }
+
+  .todo-container {
+    margin-top: 15px;
+
+    padding: 28px 17px;
+
+    border-radius: 27px;
+  }
+
+  h1 {
+    font-size: 35px;
+  }
+
+  .tagline {
+    font-size: 13px;
+
+    margin-bottom: 25px;
+  }
+
+  .stats {
+    gap: 7px;
+  }
+
+  .stat-card {
+    padding: 14px 5px;
+  }
+
+  .stat-number {
+    font-size: 22px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+  }
+
+  .main-input {
+    height: 50px;
+  }
+
+  .main-input input {
+    font-size: 14px;
+
+    padding: 0 13px;
+  }
+
+  .search-button {
+    width: 42px;
+  }
+
+  .add-button {
+    width: 48px;
+  }
+
+  .filters {
+    gap: 5px;
+  }
+
+  .filters button {
+    padding: 7px 12px;
+
+    font-size: 11px;
+  }
+
+  .task {
+    padding: 12px;
+
+    gap: 9px;
+  }
+
+  .task-text {
+    font-size: 13px;
+  }
+
+  .app::before {
+    width: 200px;
+    height: 200px;
+  }
+
+  .app::after {
+    width: 170px;
+    height: 170px;
+  }
+}
+
+/* =========================================================
+   REDUCE MOTION FOR ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+
+    transition-duration: 0.01ms !important;
+  }
+}
+
