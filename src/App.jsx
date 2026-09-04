@@ -40,13 +40,15 @@ function App() {
   // =========================
 
   const [notificationPermission, setNotificationPermission] =
-    useState(() => {
-      if ("Notification" in window) {
-        return Notification.permission;
-      }
+  useState("default");
 
-      return "unsupported";
-    });
+useEffect(() => {
+  if ("Notification" in window) {
+    setNotificationPermission(Notification.permission);
+  } else {
+    setNotificationPermission("unsupported");
+  }
+}, []);
 
   // =========================
   // SAVE TASKS
@@ -75,7 +77,10 @@ const enableNotifications = async () => {
 
     setNotificationPermission(permission);
 
-    if (permission === "granted") {
+    if (
+  "Notification" in window &&
+  Notification.permission === "granted"
+) {
       if ("serviceWorker" in navigator) {
         const registration =
           await navigator.serviceWorker.ready;
