@@ -63,51 +63,40 @@ function App() {
   // ENABLE NOTIFICATIONS
   // =========================
 
-  const enableNotifications = async () => {
-    if (!("Notification" in window)) {
-      alert(
-        "Notifications are not supported on this browser."
-      );
+const enableNotifications = async () => {
+  if (!("Notification" in window)) {
+    alert("Notifications are not supported on this browser.");
+    setNotificationPermission("unsupported");
+    return;
+  }
 
-      setNotificationPermission("unsupported");
-      return;
-    }
+  try {
+    const permission = await Notification.requestPermission();
 
-    if (Notification.permission === "granted") {
-      setNotificationPermission("granted");
+    setNotificationPermission(permission);
 
-      new Notification("LittleList ✨", {
-        body: "Notifications are already enabled! 🔔",
-      });
+    if (permission === "granted") {
+      if ("serviceWorker" in navigator) {
+        const registration =
+          await navigator.serviceWorker.ready;
 
-      return;
-    }
-
-    try {
-      const permission =
-        await Notification.requestPermission();
-
-      setNotificationPermission(permission);
-
-      if (permission === "granted") {
-        new Notification("LittleList ✨", {
+        await registration.showNotification("LittleList ✨", {
           body: "Notifications are now enabled! 🔔",
+          icon: "/pwa-192x192.png",
+          badge: "/pwa-192x192.png",
         });
       }
+    }
 
-      if (permission === "denied") {
-        alert(
-          "Notifications are blocked. Please allow them in your browser settings."
-        );
-      }
-    } catch (error) {
-      console.error(
-        "Notification permission error:",
-        error
+    if (permission === "denied") {
+      alert(
+        "Notifications are blocked. Please allow them in your browser settings."
       );
     }
-  };
-
+  } catch (error) {
+    console.error("Notification permission error:", error);
+  }
+};
   // =========================
   // NOTIFICATION BUTTON TEXT
   // =========================
