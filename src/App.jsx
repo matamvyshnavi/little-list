@@ -7,8 +7,21 @@ function App() {
   // =========================
 
   const [tasks, setTasks] = useState(() => {
-    const savedTasks = localStorage.getItem("littleListTasks");
-    return savedTasks ? JSON.parse(savedTasks) : [];
+    try {
+      const savedTasks = localStorage.getItem("littleListTasks");
+
+      if (!savedTasks) {
+        return [];
+      }
+
+      const parsedTasks = JSON.parse(savedTasks);
+
+      return Array.isArray(parsedTasks) ? parsedTasks : [];
+    } catch (error) {
+      console.error("Could not load saved tasks:", error);
+      localStorage.removeItem("littleListTasks");
+      return [];
+    }
   });
 
   const [input, setInput] = useState("");
@@ -40,66 +53,130 @@ function App() {
   // =========================
 
   const [notificationPermission, setNotificationPermission] =
-  useState("default");
+    useState("default");
 
-useEffect(() => {
-  if ("Notification" in window) {
-    setNotificationPermission(Notification.permission);
-  } else {
-    setNotificationPermission("unsupported");
-  }
-}, []);
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission);
+    } else {
+      setNotificationPermission("unsupported");
+    }
+  }, []);
 
   // =========================
   // SAVE TASKS
   // =========================
 
   useEffect(() => {
-    localStorage.setItem(
-      "littleListTasks",
-      JSON.stringify(tasks)
-    );
+    try {
+      localStorage.setItem(
+        "littleListTasks",
+        JSON.stringify(tasks)
+      );
+    } catch (error) {
+      console.error("Could not save tasks:", error);
+    }
   }, [tasks]);
 
   // =========================
-  // ENABLE NOTIFICATIONS
-  // =========================
+// SHOW NOTIFICATION
+// =========================
+
+const showNotification = async (title, body) => {
+  try {
+    if (!("Notification" in window)) {
+      console.log("Notifications are not supported.");
+      return;
+    }
+
+    if (Notification.permission !== "granted") {
+      console.log("Notification permission is not granted.");
+      return;
+    }
+
+    // Use normal browser notification
+    new Notification(title, {
+      body: body,
+      icon: "/pwa-192x192.png",
+      badge: "/pwa-192x192.png",
+    });
+
+  } catch (error) {
+    console.error("Could not show notification:", error);
+  }
+};
+
+
+// =========================
+// ENABLE NOTIFICATIONS
+// =========================
 
 const enableNotifications = async () => {
-  if (!("Notification" in window)) {
-    alert("Notifications are not supported on this browser.");
-    setNotificationPermission("unsupported");
-    return;
-  }
-
   try {
-    const permission = await Notification.requestPermission();
+    // Browser doesn't support notifications
+    if (!("Notification" in window)) {
+      setNotificationPermission("unsupported");
+
+      alert(
+        "Notifications are not supported on this browser."
+      );
+
+      return;
+    }
+
+    // Already allowed
+    if (Notification.permission === "granted") {
+      setNotificationPermission("granted");
+
+      showNotification(
+        "LittleList ✨",
+        "Notifications are already enabled! 🔔"
+      );
+
+      return;
+    }
+
+    // Previously blocked
+    if (Notification.permission === "denied") {
+      setNotificationPermission("denied");
+
+      alert(
+        "Notifications are blocked. Please allow them in your browser settings."
+      );
+
+      return;
+    }
+
+    // Ask browser for permission
+    const permission =
+      await Notification.requestPermission();
 
     setNotificationPermission(permission);
 
-    if (
-  "Notification" in window &&
-  Notification.permission === "granted"
-) {
-      if ("serviceWorker" in navigator) {
-        const registration =
-          await navigator.serviceWorker.ready;
-
-        await registration.showNotification("LittleList ✨", {
-          body: "Notifications are now enabled! 🔔",
-          icon: "/pwa-192x192.png",
-          badge: "/pwa-192x192.png",
-        });
-      }
+    // Permission granted
+    if (permission === "granted") {
+      showNotification(
+        "LittleList ✨",
+        "Notifications are now enabled! 🔔"
+      );
     }
 
+    // Permission denied
     if (permission === "denied") {
       alert(
         "Notifications are blocked. Please allow them in your browser settings."
       );
     }
+
   } catch (error) {
-    console.error("Notification permission error:", error);
+    console.error(
+      "Notification permission error:",
+      error
+    );
+
+    alert(
+      "Something went wrong while enabling notifications."
+    );
   }
 };
   // =========================
@@ -148,15 +225,12 @@ const enableNotifications = async () => {
       id: Date.now(),
       text,
       completed: false,
-
       reminderDate,
       reminderTime,
-
       reminderMinutes:
         reminderDate && reminderTime
           ? Number(reminderMinutes)
           : null,
-
       reminderSent: false,
       dueNotificationSent: false,
       overdueNotificationSent: false,
@@ -218,7 +292,7 @@ const enableNotifications = async () => {
 
   const startEditing = (task) => {
     setEditingId(task.id);
-    setEditingText(task.text);
+    setEditingText(task.text || "");
   };
 
   // =========================
@@ -268,7 +342,9 @@ const enableNotifications = async () => {
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
-      const matchesSearch = task.text
+      const taskText = String(task.text || "");
+
+      const matchesSearch = taskText
         .toLowerCase()
         .includes(search.toLowerCase());
 
@@ -356,9 +432,10 @@ const enableNotifications = async () => {
               now < dueTime &&
               !task.reminderSent
             ) {
-              new Notification("LittleList 🔔", {
-                body: `${task.text} is coming up! Your task is due soon.`,
-              });
+              showNotification(
+                "LittleList 🔔",
+                `${task.text} is coming up! Your task is due soon.`
+              );
 
               updatedTask = {
                 ...updatedTask,
@@ -373,9 +450,10 @@ const enableNotifications = async () => {
               now >= dueTime &&
               !task.dueNotificationSent
             ) {
-              new Notification("LittleList ⏰", {
-                body: `${task.text} is due now!`,
-              });
+              showNotification(
+                "LittleList ⏰",
+                `${task.text} is due now!`
+              );
 
               updatedTask = {
                 ...updatedTask,
@@ -394,9 +472,10 @@ const enableNotifications = async () => {
               now >= overdueTime &&
               !task.overdueNotificationSent
             ) {
-              new Notification("LittleList 🚨", {
-                body: `Hurry up! ${task.text} is still incomplete.`,
-              });
+              showNotification(
+                "LittleList 🚨",
+                `Hurry up! ${task.text} is still incomplete.`
+              );
 
               updatedTask = {
                 ...updatedTask,
@@ -586,7 +665,6 @@ const enableNotifications = async () => {
           <div className="reminder-controls">
 
             <div className="reminder-field">
-
               <label>
                 📅 Reminder Date
               </label>
@@ -600,11 +678,9 @@ const enableNotifications = async () => {
                   )
                 }
               />
-
             </div>
 
             <div className="reminder-field">
-
               <label>
                 ⏰ Reminder Time
               </label>
@@ -618,11 +694,9 @@ const enableNotifications = async () => {
                   )
                 }
               />
-
             </div>
 
             <div className="reminder-field">
-
               <label>
                 🔔 Remind Me
               </label>
@@ -655,7 +729,6 @@ const enableNotifications = async () => {
                   1 hour before
                 </option>
               </select>
-
             </div>
 
           </div>
@@ -781,7 +854,7 @@ const enableNotifications = async () => {
                   ) : (
 
                     <span className="task-text">
-                      {task.text}
+                      {task.text || "Untitled task"}
                     </span>
 
                   )}
